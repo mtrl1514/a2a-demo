@@ -200,8 +200,8 @@ const ChatInner = ({ onResearchUpdate, onAnalysisUpdate }: ChatProps) => {
     ],
     handler: async ({ research_data, instruction }) => {
       // This handler ensures the action is always called
-      console.log("Analysis Agent action triggered with data:", research_data?.substring(0, 100));
-      console.log("Analysis instruction:", instruction);
+      // console.log("Analysis Agent action triggered with data:", research_data?.substring(0, 100));
+      // console.log("Analysis instruction:", instruction);
       return "Analysis started";
     },
     render: (actionRenderProps) => {

@@ -31,8 +31,8 @@ export async function POST(request: NextRequest) {
   let runtime: CopilotRuntime;
 
   if (useDirectOrchestrator) {
-    console.log("[ROUTE] Using DIRECT orchestrator connection (bypassing A2A middleware)");
-    console.log(`[ROUTE] Direct orchestrator URL: ${directOrchestratorUrl}`);
+    // console.log("[ROUTE] Using DIRECT orchestrator connection (bypassing A2A middleware)");
+    // console.log(`[ROUTE] Direct orchestrator URL: ${directOrchestratorUrl}`);
 
     // Direct connection - no A2A middleware
     const orchestrationAgent = new HttpAgent({
@@ -45,8 +45,8 @@ export async function POST(request: NextRequest) {
       },
     });
   } else {
-    console.log("[ROUTE] Using A2A middleware connection (standard approach)");
-    console.log(`[ROUTE] Standard orchestrator URL: ${orchestratorUrl}`);
+    // console.log("[ROUTE] Using A2A middleware connection (standard approach)");
+    // console.log(`[ROUTE] Standard orchestrator URL: ${orchestratorUrl}`);
 
     // Connect to orchestrator via AG-UI Protocol
     const orchestrationAgent = new HttpAgent({

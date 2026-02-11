@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Chat from "@/components/chat";
+// import Chat from "@/components/chat"; // Unused - replaced by ChatEnhanced
 import ChatEnhanced from "@/components/chat-enhanced";
 
 export type ResearchData = {

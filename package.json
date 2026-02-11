@@ -2,7 +2,7 @@
   "name": "a2a-agui-starter",
   "version": "0.1.0",
   "private": true,
-  "description": "Minimal starter template for building multi-agent applications with A2A Protocol and AG-UI",
+  "description": "Multi-agent A2A demo with Direct Orchestrator mode and enhanced hover tooltip functionality",
   "scripts": {
     "dev": "concurrently --names \"UI,Orch,Research,Analysis\" --prefix-colors \"cyan,gray,green,blue\" \"npm run dev:ui\" \"npm run dev:orchestrator\" \"npm run dev:research\" \"npm run dev:analysis\"",
     "dev-direct": "concurrently --names \"UI,DirectOrch,Research,Analysis\" --prefix-colors \"cyan,yellow,green,blue\" \"npm run dev:ui\" \"npm run dev:orchestrator-direct\" \"npm run dev:research\" \"npm run dev:analysis\"",
@@ -17,7 +17,6 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@a2a-js/sdk": "latest",
     "@ag-ui/a2a-middleware": "0.0.2",
     "@ag-ui/client": "0.0.40",
     "@copilotkit/react-core": "latest",
@@ -39,8 +38,5 @@
     "tailwindcss": "^3.4.1",
     "tailwindcss-animate": "^1.0.7",
     "typescript": "^5"
-  },
-  "overrides": {
-    "@ag-ui/client": "0.0.40"
   }
 }
