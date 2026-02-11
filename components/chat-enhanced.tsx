@@ -37,8 +37,10 @@ const ChatInner = ({ onResearchUpdate, onAnalysisUpdate }: ChatProps) => {
   // Extract structured JSON from both A2A middleware and Direct Orchestrator responses
   useEffect(() => {
     const extractDataFromMessages = () => {
+      console.log("[CHAT-ENHANCED] Processing", visibleMessages.length, "messages");
       for (const message of visibleMessages) {
         const msg = message as any;
+        console.log("[CHAT-ENHANCED] Message type:", msg.type, "role:", msg.role, "actionName:", msg.actionName);
 
         // Handle A2A Middleware responses
         if (msg.type === "ResultMessage" && msg.actionName === "send_message_to_a2a_agent") {
@@ -72,17 +74,56 @@ const ChatInner = ({ onResearchUpdate, onAnalysisUpdate }: ChatProps) => {
           }
         }
 
+        // Handle Direct Orchestrator action results
+        if ((msg.type === "ResultMessage" && msg.actionName === "call_research_agent") ||
+            (msg.type === "ResultMessage" && msg.actionName === "call_analysis_agent")) {
+          try {
+            console.log("[CHAT-ENHANCED] Direct Orchestrator action result:", msg.actionName, msg.result);
+            const result = msg.result;
+            if (typeof result === "string") {
+              try {
+                const parsed = JSON.parse(result);
+                if (parsed.findings && Array.isArray(parsed.findings)) {
+                  console.log("[CHAT-ENHANCED] Research data from action result");
+                  onResearchUpdate(parsed as ResearchData);
+                }
+                if (parsed.insights && Array.isArray(parsed.insights)) {
+                  console.log("[CHAT-ENHANCED] Analysis data from action result");
+                  onAnalysisUpdate(parsed as AnalysisData);
+                }
+              } catch (e) {
+                console.log("[CHAT-ENHANCED] Failed to parse action result JSON:", e);
+              }
+            } else if (typeof result === "object" && result !== null) {
+              if (result.findings && Array.isArray(result.findings)) {
+                console.log("[CHAT-ENHANCED] Research data from action result object");
+                onResearchUpdate(result as ResearchData);
+              }
+              if (result.insights && Array.isArray(result.insights)) {
+                console.log("[CHAT-ENHANCED] Analysis data from action result object");
+                onAnalysisUpdate(result as AnalysisData);
+              }
+            }
+          } catch (e) {
+            console.error("Failed to extract data from action result:", e);
+          }
+        }
+
         // Handle Direct Orchestrator responses - extract from marked JSON data
         if (msg.type === "ResponseMessage" && msg.role === "assistant") {
           try {
             const content = msg.content;
+            console.log("[CHAT-ENHANCED] ResponseMessage content preview:", typeof content, content?.substring?.(0, 200));
             if (typeof content === "string") {
               // Look for marked research data
               const researchMatch = content.match(/RESEARCH_DATA_START:\s*(\{[\s\S]*?\})\s*:RESEARCH_DATA_END/);
+              console.log("[CHAT-ENHANCED] Research data match:", !!researchMatch);
               if (researchMatch) {
                 try {
                   const researchData = JSON.parse(researchMatch[1]);
+                  console.log("[CHAT-ENHANCED] Research data parsed:", researchData);
                   if (researchData.findings && Array.isArray(researchData.findings)) {
+                    console.log("[CHAT-ENHANCED] Calling onResearchUpdate");
                     onResearchUpdate(researchData as ResearchData);
                   }
                 } catch (e) {
@@ -92,14 +133,47 @@ const ChatInner = ({ onResearchUpdate, onAnalysisUpdate }: ChatProps) => {
 
               // Look for marked analysis data
               const analysisMatch = content.match(/ANALYSIS_DATA_START:\s*(\{[\s\S]*?\})\s*:ANALYSIS_DATA_END/);
+              console.log("[CHAT-ENHANCED] Analysis data match:", !!analysisMatch);
               if (analysisMatch) {
                 try {
                   const analysisData = JSON.parse(analysisMatch[1]);
+                  console.log("[CHAT-ENHANCED] Analysis data parsed:", analysisData);
                   if (analysisData.insights && Array.isArray(analysisData.insights)) {
+                    console.log("[CHAT-ENHANCED] Calling onAnalysisUpdate");
                     onAnalysisUpdate(analysisData as AnalysisData);
                   }
                 } catch (e) {
                   console.error("Failed to parse analysis data:", e);
+                }
+              }
+
+              // Fallback: Look for plain JSON objects in the content if markers aren't found
+              if (!researchMatch && !analysisMatch) {
+                console.log("[CHAT-ENHANCED] No markers found, trying JSON extraction fallback");
+                try {
+                  // Look for JSON objects that might be research or analysis data
+                  const jsonPattern = /\{[^{}]*"topic"[^{}]*"findings"[^{}]*\}/g;
+                  const jsonMatches = content.match(jsonPattern);
+                  if (jsonMatches) {
+                    console.log("[CHAT-ENHANCED] Found potential JSON objects:", jsonMatches.length);
+                    for (const jsonStr of jsonMatches) {
+                      try {
+                        const parsed = JSON.parse(jsonStr);
+                        if (parsed.findings && Array.isArray(parsed.findings)) {
+                          console.log("[CHAT-ENHANCED] Found research data via fallback");
+                          onResearchUpdate(parsed as ResearchData);
+                        }
+                        if (parsed.insights && Array.isArray(parsed.insights)) {
+                          console.log("[CHAT-ENHANCED] Found analysis data via fallback");
+                          onAnalysisUpdate(parsed as AnalysisData);
+                        }
+                      } catch (e) {
+                        console.log("[CHAT-ENHANCED] Failed to parse JSON fallback:", e);
+                      }
+                    }
+                  }
+                } catch (e) {
+                  console.log("[CHAT-ENHANCED] Fallback extraction failed:", e);
                 }
               }
             }
