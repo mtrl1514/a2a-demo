@@ -22,6 +22,7 @@ npm run dev:research     # Research agent only
 npm run dev:analysis     # Analysis agent only
 npm run build           # Build Next.js for production
 npm run lint            # Lint frontend code
+npm run shutdown         # Shutdown all service
 ```
 
 ### Python Environment Setup

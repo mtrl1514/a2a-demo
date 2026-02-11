@@ -24,56 +24,81 @@ export async function POST(request: NextRequest) {
   const analysisAgentUrl = process.env.ANALYSIS_AGENT_URL || "http://localhost:9102";
   const orchestratorUrl = process.env.ORCHESTRATOR_URL || "http://localhost:9100";
 
-  // Connect to orchestrator via AG-UI Protocol
-  const orchestrationAgent = new HttpAgent({
-    url: orchestratorUrl,
-  });
+  // Check if we should use direct orchestrator (for testing A2A middleware issues)
+  const useDirectOrchestrator = process.env.USE_DIRECT_ORCHESTRATOR === 'true';
+  const directOrchestratorUrl = process.env.ORCHESTRATOR_DIRECT_URL || "http://localhost:9103";
 
-  // A2A Middleware: Wraps orchestrator and injects send_message_to_a2a_agent tool
-  // This allows orchestrator to communicate with A2A agents transparently
-  const a2aMiddlewareAgent = new A2AMiddlewareAgent({
-    description:
-      "Research assistant with 2 specialized agents: Research (LangGraph) and Analysis (ADK)",
-    agentUrls: [
-      researchAgentUrl,
-      analysisAgentUrl,
-    ],
-    orchestrationAgent,
-    instructions: `
-      You are a research assistant that orchestrates between 2 specialized agents.
+  let runtime: CopilotRuntime;
 
-      AVAILABLE AGENTS:
+  if (useDirectOrchestrator) {
+    console.log("[ROUTE] Using DIRECT orchestrator connection (bypassing A2A middleware)");
+    console.log(`[ROUTE] Direct orchestrator URL: ${directOrchestratorUrl}`);
 
-      - Research Agent (LangGraph): Gathers and summarizes information about a topic
-      - Analysis Agent (ADK): Analyzes research findings and provides insights
+    // Direct connection - no A2A middleware
+    const orchestrationAgent = new HttpAgent({
+      url: directOrchestratorUrl,
+    });
 
-      WORKFLOW STRATEGY (SEQUENTIAL - ONE AT A TIME):
+    runtime = new CopilotRuntime({
+      agents: {
+        a2a_chat: orchestrationAgent, // Must match agent prop in <CopilotKit agent="a2a_chat">
+      },
+    });
+  } else {
+    console.log("[ROUTE] Using A2A middleware connection (standard approach)");
+    console.log(`[ROUTE] Standard orchestrator URL: ${orchestratorUrl}`);
 
-      When the user asks to research a topic:
+    // Connect to orchestrator via AG-UI Protocol
+    const orchestrationAgent = new HttpAgent({
+      url: orchestratorUrl,
+    });
 
-      1. Research Agent - First, gather information about the topic
-         - Pass: The user's research query or topic
-         - The agent will return structured JSON with research findings
+    // A2A Middleware: Wraps orchestrator and injects send_message_to_a2a_agent tool
+    // This allows orchestrator to communicate with A2A agents transparently
+    const a2aMiddlewareAgent = new A2AMiddlewareAgent({
+      description:
+        "Research assistant with 2 specialized agents: Research (LangGraph) and Analysis (ADK)",
+      agentUrls: [
+        researchAgentUrl,
+        analysisAgentUrl,
+      ],
+      orchestrationAgent,
+      instructions: `
+        You are a research assistant that orchestrates between 2 specialized agents.
 
-      2. Analysis Agent - Then, analyze the research results
-         - Pass: The research results from step 1
-         - The agent will return structured JSON with analysis and insights
+        AVAILABLE AGENTS:
 
-      3. Present the complete research and analysis to the user
+        - Research Agent (LangGraph): Gathers and summarizes information about a topic
+        - Analysis Agent (ADK): Analyzes research findings and provides insights
 
-      CRITICAL RULES:
-      - Call agents ONE AT A TIME, wait for results before making next call
-      - Pass information from earlier agents to later agents
-      - Synthesize all gathered information in final response
-    `,
-  });
+        WORKFLOW STRATEGY (SEQUENTIAL - ONE AT A TIME):
 
-  // CopilotKit runtime connects frontend to agent system
-  const runtime = new CopilotRuntime({
-    agents: {
-      a2a_chat: a2aMiddlewareAgent, // Must match agent prop in <CopilotKit agent="a2a_chat">
-    },
-  });
+        When the user asks to research a topic:
+
+        1. Research Agent - First, gather information about the topic
+           - Pass: The user's research query or topic
+           - The agent will return structured JSON with research findings
+
+        2. Analysis Agent - Then, analyze the research results
+           - Pass: The research results from step 1
+           - The agent will return structured JSON with analysis and insights
+
+        3. Present the complete research and analysis to the user
+
+        CRITICAL RULES:
+        - Call agents ONE AT A TIME, wait for results before making next call
+        - Pass information from earlier agents to later agents
+        - Synthesize all gathered information in final response
+      `,
+    });
+
+    // CopilotKit runtime connects frontend to agent system
+    runtime = new CopilotRuntime({
+      agents: {
+        a2a_chat: a2aMiddlewareAgent, // Must match agent prop in <CopilotKit agent="a2a_chat">
+      },
+    });
+  }
 
   const { handleRequest } = copilotRuntimeNextJSAppRouterEndpoint({
     runtime,

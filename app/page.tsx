@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Chat from "@/components/chat";
+import ChatEnhanced from "@/components/chat-enhanced";
 
 export type ResearchData = {
   topic: string;
@@ -27,6 +28,9 @@ export type AnalysisData = {
 export default function Home() {
   const [researchData, setResearchData] = useState<ResearchData | null>(null);
   const [analysisData, setAnalysisData] = useState<AnalysisData | null>(null);
+
+  // Use enhanced chat component that supports both middleware and direct orchestrator
+  const ChatComponent = ChatEnhanced;
 
   return (
     <div className="relative flex h-screen overflow-hidden bg-[#DEDEE9] p-2">
@@ -57,11 +61,11 @@ export default function Home() {
               <span className="text-[#1B936F] font-semibold">1 LangGraph</span> +{" "}
               <span className="text-[#BEC2FF] font-semibold">1 ADK</span> agent
             </p>
-            <p className="text-xs text-[#838389] mt-1">Orchestrator-mediated A2A Protocol</p>
+            <p className="text-xs text-[#838389] mt-1">A2A Protocol (Middleware + Direct Support)</p>
           </div>
 
           <div className="flex-1 overflow-hidden">
-            <Chat onResearchUpdate={setResearchData} onAnalysisUpdate={setAnalysisData} />
+            <ChatComponent onResearchUpdate={setResearchData} onAnalysisUpdate={setAnalysisData} />
           </div>
         </div>
 

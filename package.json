@@ -5,11 +5,13 @@
   "description": "Minimal starter template for building multi-agent applications with A2A Protocol and AG-UI",
   "scripts": {
     "dev": "concurrently --names \"UI,Orch,Research,Analysis\" --prefix-colors \"cyan,gray,green,blue\" \"npm run dev:ui\" \"npm run dev:orchestrator\" \"npm run dev:research\" \"npm run dev:analysis\"",
+    "dev-direct": "concurrently --names \"UI,DirectOrch,Research,Analysis\" --prefix-colors \"cyan,yellow,green,blue\" \"npm run dev:ui\" \"npm run dev:orchestrator-direct\" \"npm run dev:research\" \"npm run dev:analysis\"",
     "dev:ui": "next dev --turbopack",
     "dev:orchestrator": "agents\\.venv\\Scripts\\python.exe agents\\orchestrator.py",
+    "dev:orchestrator-direct": "agents\\.venv\\Scripts\\python.exe agents\\orchestrator_direct.py",
     "dev:research": "agents\\.venv\\Scripts\\python.exe agents\\research_agent.py",
     "dev:analysis": "agents\\.venv\\Scripts\\python.exe agents\\analysis_agent.py",
-    "shutdown": "powershell -Command \"$ports = @(3000, 3001, 9100, 9101, 9102); foreach ($port in $ports) { $procs = Get-NetTCPConnection -LocalPort $port -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique; foreach ($proc in $procs) { if ($proc -gt 0) { Write-Host \\\"Terminating process $proc on port $port\\\"; Stop-Process -Id $proc -Force -ErrorAction SilentlyContinue } } }\"",
+    "shutdown": "powershell -Command \"$ports = @(3000, 3001, 9100, 9101, 9102, 9103); foreach ($port in $ports) { $procs = Get-NetTCPConnection -LocalPort $port -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique; foreach ($proc in $procs) { if ($proc -gt 0) { Write-Host \\\"Terminating process $proc on port $port\\\"; Stop-Process -Id $proc -Force -ErrorAction SilentlyContinue } } }\"",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
